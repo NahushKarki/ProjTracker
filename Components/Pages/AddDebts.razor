@@ -1,0 +1,77 @@
+﻿@page "/add-debt"
+@using Tracker.Models
+@using Tracker.Services
+@using Tracker.Services.Debt
+@inject AuthenticationStateService authStateService
+@inject IDebtService debtService
+@inject NavigationManager navigationManager
+
+
+
+
+@if (authStateService.IsAuthenticated())
+{
+    <div>
+        @*<h4>Welcome, @authStateService.GetAuthenticatedUser().UserName!</h4>*@
+        <form>
+            
+            <div>
+                <label>Description:</label>
+                <input type="text" @bind="newDebt.DebtDescription" />
+            </div>
+            <div>
+                <label>Type:</label>
+                <input type="text" @bind="newDebt.DebtType" />
+            </div>
+            
+            <br />
+            <button type="button" @onclick="AddDebt">Add Debt</button>
+        </form>
+    </div>
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <p class="error-message">@errorMessage</p>
+    }
+}
+else
+{
+    navigationManager.NavigateTo("/");
+}
+
+
+
+
+@code {
+
+    private List<TotalDebt> userDebts = new();
+    private TotalDebt newDebt = new TotalDebt();
+    private string errorMessage; // Field to hold error messages
+
+
+    private async Task AddDebt()
+    {
+        var user = authStateService.GetAuthenticatedUser();
+        if (user != null)
+        {
+            newDebt.UserId = user.UserId;
+
+            try
+            {
+                await debtService.AddDebtAsync(newDebt);
+                // Reload tasks to reflect newly added task
+                
+                newDebt = new TotalDebt(); // Reset form
+                errorMessage = null; // Clear any previous error messages
+            }
+            catch (Exception ex)
+            {
+                // Handle error (e.g., show a message to the user)
+                errorMessage = $"Error adding task: {ex.Message}";
+                Console.WriteLine(errorMessage); // Log for debugging
+            }
+        }
+
+
+    }
+
+}

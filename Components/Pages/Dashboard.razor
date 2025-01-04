@@ -1,0 +1,56 @@
+﻿@page "/dashboard"
+@using Tracker.Models
+@using Tracker.Services
+@using Tracker.Services.Transaction
+@inject AuthenticationStateService authStateService
+@inject ITransactionService transactionService
+@inject NavigationManager navigationManager
+@inject IUserService userService
+
+
+
+@if (authStateService.IsAuthenticated())
+{
+    <h1>DashBoard</h1>
+    <h4>Welcome, @authStateService.GetAuthenticatedUser().UserName!</h4>
+    @if (userTransactions != null)
+    {
+        <table>
+            <ul>
+                @foreach (var transaction in userTransactions)
+                {
+                    <li>@transaction.TransactionDescription - @transaction.TransactionDate.ToShortDateString()</li>
+                    <li>@transaction.TransactionType</li>
+                }
+            </ul>
+        </table>
+        
+    }
+    else
+    {
+        <p>No tasks added for @authStateService.GetAuthenticatedUser().Name</p>
+    }
+    
+}
+
+@code {
+    private List<AccountTransaction> userTransactions = new();
+    private AccountTransaction newTransaction = new AccountTransaction();
+    protected override async Task OnInitializedAsync()
+    {
+
+        newTransaction.TransactionDate = DateTime.Today;
+        await LoadUserTransactions();
+    }
+
+    private async Task LoadUserTransactions()
+    {
+        var user = authStateService.GetAuthenticatedUser();
+        if (user != null)
+        {
+            userTransactions = await transactionService.GetTransactionsByUserIdAsync(user.UserId);
+        }
+    }
+
+
+}

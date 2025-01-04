@@ -1,0 +1,110 @@
+﻿@page "/account-transaction"
+@using Tracker.Models
+@using Tracker.Services
+@using Tracker.Services.Transaction
+@inject AuthenticationStateService authStateService
+@inject ITransactionService transactionService
+@inject NavigationManager navigationManager
+@inject IUserService userService
+
+
+
+<h3>Add Transaction</h3>
+@if (authStateService.IsAuthenticated())
+{
+    <div>
+        @*<h4>Welcome, @authStateService.GetAuthenticatedUser().UserName!</h4>*@
+        <form>
+            <div>
+                <label>Transaction:</label>
+                <input type="text" @bind="newTransaction.TransactionName" />
+            </div>
+            <div>
+                <label>Description:</label>
+                <input type="text" @bind="newTransaction.TransactionDescription" />
+            </div>
+            <div>
+                <label>Type:</label>
+                <input type="text" @bind="newTransaction.TransactionType" />
+            </div>
+            <div>
+                <label>Type:</label>
+                <input type="checkbox" id="type1" name="type1" value="inflow">
+                <label for="type1"> Inflow </label><br>
+                <input type="checkbox" id="type2" name="type2" value="outflow">
+                <label for="type2"> Outflow </label><br>
+
+            </div>
+            <div>
+                <label>Date:</label>
+                <input type="date" @bind="newTransaction.TransactionDate" />
+            </div>
+            <br/>
+            <button type="button" @onclick="AddTransaction">Add Transaction</button>
+        </form>
+        </div>
+         @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <p class="error-message">@errorMessage</p>
+        }
+    
+
+   
+}
+else
+{
+    navigationManager.NavigateTo("/");
+}
+
+
+
+
+@code {
+
+    private List<AccountTransaction> userTransactions = new();
+    private AccountTransaction newTransaction = new AccountTransaction();
+    private string errorMessage; // Field to hold error messages
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        newTransaction.TransactionDate = DateTime.Today;
+        await LoadUserTransactions();
+    }
+
+    private async Task LoadUserTransactions()
+    {
+        var user = authStateService.GetAuthenticatedUser();
+        if (user != null)
+        {
+            userTransactions = await transactionService.GetTransactionsByUserIdAsync(user.UserId);
+        }
+    }
+
+    private async Task AddTransaction()
+    {
+        var user = authStateService.GetAuthenticatedUser();
+        if (user != null)
+        {
+            newTransaction.UserId = user.UserId;
+
+            try
+            {
+                await transactionService.AddTransactionAsync(newTransaction);
+                // Reload tasks to reflect newly added task
+                await LoadUserTransactions();
+                newTransaction = new AccountTransaction(); // Reset form
+                errorMessage = null; // Clear any previous error messages
+            }
+            catch (Exception ex)
+            {
+                // Handle error (e.g., show a message to the user)
+                errorMessage = $"Error adding task: {ex.Message}";
+                Console.WriteLine(errorMessage); // Log for debugging
+            }
+        }
+
+
+}
+
+}
