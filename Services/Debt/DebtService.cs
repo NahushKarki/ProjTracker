@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using System.IO;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Tracker.Models;
 
 namespace Tracker.Services.Debt
 {
-    public class DebtService
+    public class DebtService : IDebtService
     {
         private readonly string debtsFilePath = Path.Combine(AppContext.BaseDirectory, "DebtDetails.json");
 

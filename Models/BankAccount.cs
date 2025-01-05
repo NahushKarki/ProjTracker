@@ -18,11 +18,13 @@ namespace Tracker.Models
 
         public string BankName { get; set; }
 
+        public string BankDescription { get; set; }
+
         public string BankType { get; set; }
 
         public int BankBalance { get; set; }
 
-        public DateTime Date { get; set; }
+        public DateTime BankRegisteredDate { get; set; }
       
     }
 }

@@ -1,16 +1,113 @@
 ﻿@page "/bank-detail"
 @using Tracker.Models
 @using Tracker.Services
+@using Tracker.Services.Bank
 @inject AuthenticationStateService authStateService
-@inject IUserService userService
+@inject IBankService bankService
 @inject NavigationManager navigationManager
 
+
+
+<h3>Add Bank</h3>
 @if (authStateService.IsAuthenticated())
 {
+    <div>
+        @*<h4>Welcome, @authStateService.GetAuthenticatedUser().UserName!</h4>*@
+        <form>
+            <div>
+                <label>Name:</label>
+                <input type="text" @bind="newBank.BankName" />
+            </div>
+            <div>
+                <label>Description:</label>
+                <input type="text" @bind="newBank.BankDescription" />
+            </div>
+            <div>
+                <label>Type:</label>
+                <input type="text" @bind="newBank.BankType" />
+            </div>
 
+            <div>
+                <label>Balance:</label>
+                <input type="number" @bind="newBank.BankBalance" />
+            </div>
+            <div>
+                <label>Date:</label>
+                <input type="date" @bind="newBank.BankRegisteredDate" />
+            </div>
+            <br />
+            <button type="button" @onclick="AddBank">Add Bank</button>
+        </form>
+    </div>
+    <h4>Your Banks</h4>
+    @if (userBanks != null)
+    {
+        <ul>
+            @foreach (var bank in userBanks)
+            {
+                <li>@bank.BankName - @bank.BankRegisteredDate.ToShortDateString() - @bank.BankDescription</li>
+            }
+        </ul>
+    }
+    else
+    {
+        <p>No tasks added for @authStateService.GetAuthenticatedUser().UserName</p>
+    }
 }
-<h3>BankDetail</h3>
+else
+{
+    navigationManager.NavigateTo("/");
+}
+
+
+
 
 @code {
+
+    private List<BankAccount> userBanks = new();
+    private BankAccount newBank = new BankAccount();
+    private string errorMessage; // Field to hold error messages
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        newBank.BankRegisteredDate = DateTime.Today;
+        await LoadUserBanks();
+    }
+
+    private async Task LoadUserBanks()
+    {
+        var user = authStateService.GetAuthenticatedUser();
+        if (user != null)
+        {
+            userBanks = await bankService.GetBanksByUserIdAsync(user.UserId);
+        }
+    }
+
+    private async Task AddBank()
+    {
+        var user = authStateService.GetAuthenticatedUser();
+        if (user != null)
+        {
+            newBank.UserId = user.UserId;
+
+            try
+            {
+                await bankService.AddBankAsync(newBank);
+                // Reload tasks to reflect newly added task
+                await LoadUserBanks();
+                newBank = new BankAccount(); // Reset form
+                errorMessage = null; // Clear any previous error messages
+            }
+            catch (Exception ex)
+            {
+                // Handle error (e.g., show a message to the user)
+                errorMessage = $"Error adding task: {ex.Message}";
+                Console.WriteLine(errorMessage); // Log for debugging
+            }
+        }
+
+
+    }
 
 }

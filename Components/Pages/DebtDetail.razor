@@ -1,31 +1,113 @@
 ﻿@page "/debt-detail"
 @using Tracker.Models
 @using Tracker.Services
+@using Tracker.Services.Debt
 @inject AuthenticationStateService authStateService
-@inject IUserService userService
+@inject IDebtService debtService
 @inject NavigationManager navigationManager
 
 
 
+<h3>Add Debt</h3>
 @if (authStateService.IsAuthenticated())
 {
-    <h2>Add Debt </h2>
-
-    <form>
-        <div>
-            <h3>Debt Amount</h3>
-            <input type="number" />
-        </div>
-        <div>
-            <h3>from Bank</h3>
-            <input type="text" />
-        </div>
-    </form>
-    <button>Add</button>
-
+    <div>
+        @*<h4>Welcome, @authStateService.GetAuthenticatedUser().UserName!</h4>*@
+        <form>
+            <div>
+                <label>Debt:</label>
+                <input type="text" @bind="newDebt.DebtDescription" />
+            </div>
+            <div>
+                <label>Type:</label>
+                <input type="text" @bind="newDebt.DebtType" />
+            </div>
+            <div>
+                <label>Amount:</label>
+                <input type="number" @bind="newDebt.DebtAmount" />
+            </div>
+          
+            <div>
+                <label>Taken Date:</label>
+                <input type="date" @bind="newDebt.DebtTakenDate" />
+            </div>
+            <div>
+                <label>Due Date:</label>
+                <input type="date" @bind="newDebt.DebtDueDate" />
+            </div>
+            <br />
+            <button type="button" @onclick="AddDebt">Add Debt</button>
+        </form>
+    </div>
+    <h4>Your Debts</h4>
+    @if (userDebts != null)
+    {
+        <ul>
+            @foreach (var debt in userDebts)
+            {
+                <li>@debt.DebtDescription - @debt.DebtDueDate.ToShortDateString()</li>
+            }
+        </ul>
+    }
+    else
+    {
+        <p>No tasks added for @authStateService.GetAuthenticatedUser().UserName</p>
+    }
+}
+else
+{
+    navigationManager.NavigateTo("/");
 }
 
 
+
+
 @code {
+
+    private List<TotalDebt> userDebts = new();
+    private TotalDebt newDebt = new TotalDebt();
+    private string errorMessage; // Field to hold error messages
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        newDebt.DebtTakenDate = DateTime.Today;
+        await LoadUserDebts();
+    }
+
+    private async Task LoadUserDebts()
+    {
+        var user = authStateService.GetAuthenticatedUser();
+        if (user != null)
+        {
+            userDebts = await debtService.GetDebtsByUserIdAsync(user.UserId);
+        }
+    }
+
+    private async Task AddDebt()
+    {
+        var user = authStateService.GetAuthenticatedUser();
+        if (user != null)
+        {
+            newDebt.UserId = user.UserId;
+
+            try
+            {
+                await debtService.AddDebtAsync(newDebt);
+                // Reload tasks to reflect newly added task
+                await LoadUserDebts();
+                newDebt = new TotalDebt(); // Reset form
+                errorMessage = null; // Clear any previous error messages
+            }
+            catch (Exception ex)
+            {
+                // Handle error (e.g., show a message to the user)
+                errorMessage = $"Error adding task: {ex.Message}";
+                Console.WriteLine(errorMessage); // Log for debugging
+            }
+        }
+
+
+    }
 
 }

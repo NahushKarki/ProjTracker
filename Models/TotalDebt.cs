@@ -11,8 +11,14 @@ namespace Tracker.Models
         public int DebtId { get; set; }
         public int UserId { get; set; }
 
+        public int DebtAmount { get; set; }
+
         public string DebtDescription { get; set; }
 
         public string DebtType { get; set; }
+
+        public DateTime DebtTakenDate { get; set; }
+
+        public DateTime DebtDueDate { get; set; }
     }
 }

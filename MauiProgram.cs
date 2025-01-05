@@ -2,6 +2,7 @@
 using Tracker.Services;
 using Tracker.Services.Debt;
 using Tracker.Services.Transaction;
+using Tracker.Services.Bank;
 
 namespace Tracker
 {
@@ -22,8 +23,8 @@ namespace Tracker
             //registering User Services
             builder.Services.AddSingleton<IUserService, UserService>();
             builder.Services.AddSingleton<ITodoService, TodoService>();
-            
-
+            builder.Services.AddSingleton<IDebtService, DebtService>();
+            builder.Services.AddSingleton<IBankService, BankService>();
             builder.Services.AddSingleton<ITransactionService, TransactionService>();
             builder.Services.AddSingleton<AuthenticationStateService>();
 
